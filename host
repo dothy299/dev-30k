@@ -1,0 +1,48 @@
+const express = require('express');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+
+// Criação do app Express
+const app = express();
+const port = 3000;
+
+// Middleware
+app.use(cors()); // Permite requisições de outros domínios
+app.use(bodyParser.json()); // Interpreta os dados JSON recebidos
+
+// Conexão com o MongoDB
+mongoose.connect('mongodb://localhost:27017/dev30k', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => {
+    console.log('Conectado ao MongoDB');
+}).catch(err => {
+    console.log('Erro ao conectar no MongoDB:', err);
+});
+
+// Definição do modelo de Usuário
+const User = mongoose.model('User', new mongoose.Schema({
+    name: { type: String, required: true },
+    email: { type: String, required: true }
+}));
+
+// Rota para listar todos os usuários cadastrados
+app.get('/users', async (req, res) => {
+    const users = await User.find();
+    res.json(users);
+});
+
+// Rota para cadastrar um novo usuário
+app.post('/users', async (req, res) => {
+    const { name, email } = req.body;
+
+    const newUser = new User({ name, email });
+    await newUser.save();
+    res.status(201).json(newUser);
+});
+
+// Inicialização do servidor
+app.listen(port, () => {
+    console.log(`Servidor rodando em http://localhost:${port}`);
+});
